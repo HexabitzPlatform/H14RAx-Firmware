@@ -52,10 +52,10 @@
 /* Port-UART mapping */
 #define UART_P1 &huart4
 #define UART_P2 &huart2
-#define UART_P3 &huart3
-#define UART_P4 &huart1
-#define UART_P5 &huart5
-#define UART_P6 &huart6
+#define UART_P3 &huart6
+#define UART_P4 &huart3
+#define UART_P5 &huart1
+#define UART_P6 &huart5
 
 /* Module-specific Hardware Definitions ************************************/
 /* Port Definitions */
@@ -89,15 +89,15 @@
 #define	USART5_RX_PORT		GPIOD
 #define	USART5_AF			GPIO_AF3_USART5
 
-#define	USART6_TX_PIN		GPIO_PIN_8
-#define	USART6_RX_PIN		GPIO_PIN_9
-#define	USART6_TX_PORT		GPIOB
-#define	USART6_RX_PORT		GPIOB
-#define	USART6_AF			GPIO_AF8_USART6
+#define	USART6_TX_PIN		GPIO_PIN_4
+#define	USART6_RX_PIN		GPIO_PIN_5
+#define	USART6_TX_PORT		GPIOA
+#define	USART6_RX_PORT		GPIOA
+#define	USART6_AF			GPIO_AF3_USART6
 
 /* Indicator LED */
 #define _IND_LED_PORT		GPIOB
-#define _IND_LED_PIN		GPIO_PIN_14
+#define _IND_LED_PIN		GPIO_PIN_15
 
 /* Module-specific Macro Definitions ***************************************/
 #define NUM_MODULE_PARAMS		1

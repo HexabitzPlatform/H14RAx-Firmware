@@ -694,7 +694,66 @@ Module_Status escSetSpeedMotor(Motor motor, uint8_t dutyCycle) {
 }
 
 /***************************************************************************/
+/**
+ * @brief Generate a PWM signal on a selected output channel with a specified frequency and duty cycle.
+ * @param out         Output channel index (OUT_1 to OUT_6).
+ * @param freq_Hz     Desired frequency in Hz.
+ * @param dutyCycle   Duty cycle percentage (0 to 100).
+ * @retval H14RA_OK on success, error code otherwise.
+ */
+Module_Status pwmGenerate(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
+	if (out > OUT_6 || out < OUT_1) {
+		return H14RA_ERR_INVALID_OUT_CHANNEL;
+	}
+	if (dutyCycle > MAX_DUTY_CYCLE || dutyCycle < MIN_DUTY_CYCLE) {
+		return H14RA_ERR_WRONGPARAMS;
+	}
+	/*Only reconfigure timer if frequency has changed*/
+	if (prevFreq[out] != freq_Hz) {
+		/*Adjust this per clock setup*/
+		uint32_t timerClk = HAL_RCC_GetPCLK1Freq();
+		uint32_t prescaler = 0;
+		uint32_t period = 0;
 
+		/*Try to calculate a suitable prescaler and period*/
+		for (prescaler = 0; prescaler < 0xFFFF; prescaler++) {
+			period = (timerClk / ((prescaler + 1) * freq_Hz)) - 1;
+			if (period <= 0xFFFF)
+				break;
+		}
+		if (prescaler >= 0xFFFF || period >= 0xFFFF || freq_Hz > MAX_FREQ_OUT) {
+			return H14RA_ERR_INVALID_FREQ;
+		}
+		ChannelsOut[out].htim->Init.Prescaler = prescaler;
+		ChannelsOut[out].htim->Init.Period = period;
+		if (HAL_TIM_PWM_Init(ChannelsOut[out].htim) != HAL_OK) {
+			return H14RA_ERROR;
+		}
+		TIM_OC_InitTypeDef sConfigOC = { 0 };
+		sConfigOC.OCMode = TIM_OCMODE_PWM2;
+		sConfigOC.Pulse = (uint32_t) ((dutyCycle / 100.0f) * period);
+		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
+		if (HAL_TIM_PWM_ConfigChannel(ChannelsOut[out].htim, &sConfigOC,ChannelsOut[out].channel) != HAL_OK) {
+			return H14RA_ERROR;
+		}
+		prevFreq[out] = freq_Hz;
+
+	} else {
+		uint32_t period = ChannelsOut[out].htim->Init.Period;
+		*(motors[out].CCRx) = (uint32_t) ((dutyCycle / 100.0f) * period);
+	}
+	/*Start PWM if not already started*/
+	if (!(pwmStartedFlags & (1 << out))) {
+		if (HAL_TIM_PWM_Start(ChannelsOut[out].htim, ChannelsOut[out].channel)!= HAL_OK) {
+			return H14RA_ERROR;
+		}
+		/*Set the Flag after PWM started*/
+		pwmStartedFlags |= (1 << out);
+	}
+	return H14RA_OK;
+}
 
 /***************************************************************************/
 

@@ -131,6 +131,8 @@
 #define NUM_OUTS            ((uint8_t) 6)
 #define MAX_DUTY_CYCLE      ((uint8_t)100)
 #define MIN_DUTY_CYCLE      ((uint8_t)0)
+/*Max frequency value that can be generated at the output in [HZ].*/
+#define MAX_FREQ_OUT        ((uint32_t)70000)
 /*htim timers handlers*/
 #define TIMER_HANDLE_OUT1 htim1
 #define TIMER_HANDLE_OUT2 htim15
@@ -217,6 +219,7 @@ extern void SystemClock_Config(void);
 Module_Status escTurnOnMotor(Motor motor);
 Module_Status escTurnOffMotor(Motor motor);
 Module_Status escSetSpeedMotor(Motor motor, uint8_t dutyCycle);
+Module_Status pwmGenerate(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle);
 #endif /* H14RA_H */
 
 /***************** (C) COPYRIGHT HEXABITZ ***** END OF FILE ****************/

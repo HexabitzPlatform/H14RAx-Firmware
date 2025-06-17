@@ -25,8 +25,12 @@ UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart6;
-
-
+/* Define TIMERS handle variables */
+TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim15;
 
 /* Private Variables *******************************************************/
 
@@ -36,6 +40,12 @@ ModuleParam_t ModuleParam[NUM_MODULE_PARAMS] = { 0 };
 
 
 /* Private Function Prototypes *********************************************/
+/* TIMERS Initialization Function*/
+void MX_TIM1_Init(void);
+void MX_TIM2_Init(void);
+void MX_TIM3_Init(void);
+void MX_TIM4_Init(void);
+void MX_TIM15_Init(void);
 
 void Module_Peripheral_Init(void);
 void SetupPortForRemoteBootloaderUpdate(uint8_t port);
@@ -460,7 +470,11 @@ void Module_Peripheral_Init(void) {
 	MX_USART5_UART_Init();
 	MX_USART6_UART_Init();
 
-
+	MX_TIM1_Init();
+	MX_TIM2_Init();
+	MX_TIM3_Init();
+	MX_TIM4_Init();
+	MX_TIM15_Init();
 	/* Circulating DMA Channels ON All Module */
 	for (int i = 1; i <= NUM_OF_PORTS; i++) {
 		if (GetUart(i) == &huart1) {

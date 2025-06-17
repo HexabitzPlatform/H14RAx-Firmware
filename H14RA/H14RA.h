@@ -152,6 +152,19 @@
 #define TIMER_CCR_OUT4 TIM2->CCR1
 #define TIMER_CCR_OUT5 TIM3->CCR2
 #define TIMER_CCR_OUT6 TIM4->CCR4
+/*PINs and PORTs of the Timers*/
+#define TIMER_OUT1_PIN  GPIO_PIN_11
+#define TIMER_OUT1_PORT GPIOA
+#define TIMER_OUT2_PIN  GPIO_PIN_14
+#define TIMER_OUT2_PORT GPIOB
+#define TIMER_OUT3_PIN  GPIO_PIN_1
+#define TIMER_OUT3_PORT GPIOB
+#define TIMER_OUT4_PIN  GPIO_PIN_15
+#define TIMER_OUT4_PORT GPIOA
+#define TIMER_OUT5_PIN  GPIO_PIN_5
+#define TIMER_OUT5_PORT GPIOB
+#define TIMER_OUT6_PIN  GPIO_PIN_9
+#define TIMER_OUT6_PORT GPIOB
 /* Module-specific Enumeration Definitions *********************************/
 typedef enum {
     MOTOR_1 = 0,

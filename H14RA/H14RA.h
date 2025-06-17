@@ -173,7 +173,7 @@ typedef enum {
     MOTOR_4,
     MOTOR_5,
     MOTOR_6
-} Motor_t;
+} Motor;
 typedef enum {
     OUT_1 = 0,
 	OUT_2,
@@ -181,7 +181,7 @@ typedef enum {
 	OUT_4,
 	OUT_5,
 	OUT_6
-} ChannelOut_t;
+} ChannelOut;
 /* Module-specific Type Definition *****************************************/
 /* Module-status Type Definition */
 typedef enum {
@@ -214,8 +214,9 @@ extern void SystemClock_Config(void);
 /***************************************************************************/
 /***************************** General Functions ***************************/
 /***************************************************************************/
-
-
+Module_Status escTurnOnMotor(Motor motor);
+Module_Status escTurnOffMotor(Motor motor);
+Module_Status escSetSpeedMotor(Motor motor, uint8_t dutyCycle);
 #endif /* H14RA_H */
 
 /***************** (C) COPYRIGHT HEXABITZ ***** END OF FILE ****************/

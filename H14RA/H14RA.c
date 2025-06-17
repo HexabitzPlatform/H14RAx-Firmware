@@ -33,7 +33,40 @@ TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim15;
 
 /* Private Variables *******************************************************/
-
+/*Structure for configuring a motor or PWM output channel.*/
+typedef struct {
+    TIM_HandleTypeDef* htim;
+    uint32_t channel;
+    volatile uint32_t* CCRx;
+} MotorConfig_t;
+/**
+ * Motor configurations for up to 6 motors.
+ * Each entry defines the timer handle, channel, and CCR register
+ * for the respective motor.
+ */
+const MotorConfig_t motors[] = {
+    { &TIMER_HANDLE_OUT1, TIMER_CHANAL_OUT1, &TIMER_CCR_OUT1 },
+    { &TIMER_HANDLE_OUT2, TIMER_CHANAL_OUT2, &TIMER_CCR_OUT2 },
+    { &TIMER_HANDLE_OUT3, TIMER_CHANAL_OUT3, &TIMER_CCR_OUT3 },
+    { &TIMER_HANDLE_OUT4, TIMER_CHANAL_OUT4, &TIMER_CCR_OUT4 },
+    { &TIMER_HANDLE_OUT5, TIMER_CHANAL_OUT5, &TIMER_CCR_OUT5 },
+    { &TIMER_HANDLE_OUT6, TIMER_CHANAL_OUT6, &TIMER_CCR_OUT6 }
+};
+/* Generic output channel configuration used for PWM signal generation.*/
+const MotorConfig_t ChannelsOut[] = {
+    { &TIMER_HANDLE_OUT1, TIMER_CHANAL_OUT1, &TIMER_CCR_OUT1 },
+    { &TIMER_HANDLE_OUT2, TIMER_CHANAL_OUT2, &TIMER_CCR_OUT2 },
+    { &TIMER_HANDLE_OUT3, TIMER_CHANAL_OUT3, &TIMER_CCR_OUT3 },
+    { &TIMER_HANDLE_OUT4, TIMER_CHANAL_OUT4, &TIMER_CCR_OUT4 },
+    { &TIMER_HANDLE_OUT5, TIMER_CHANAL_OUT5, &TIMER_CCR_OUT5 },
+    { &TIMER_HANDLE_OUT6, TIMER_CHANAL_OUT6, &TIMER_CCR_OUT6 }
+};
+/*Bitmask flags to track which ESC channels have started PWM.*/
+uint16_t escPwmStartedFlags = 0U;
+/*Bitmask flags to track which general output channels have started PWM*/
+uint16_t  pwmStartedFlags = 0U;
+/*Stores the previously used frequency for each output channel*/
+uint32_t prevFreq[NUM_OUTS]= {0};
 
 /* Module Parameters */
 ModuleParam_t ModuleParam[NUM_MODULE_PARAMS] = { 0 };
@@ -54,7 +87,7 @@ uint8_t ClearROtopology(void);
 Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src, uint8_t dst, uint8_t shift);
 
 /* Local Function Prototypes ***********************************************/
-
+uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min, uint16_t out_max);
 
 /* Create CLI commands *****************************************************/
 
@@ -564,7 +597,19 @@ Module_Status GetModuleParameter(uint8_t paramIndex, float *value) {
 /***************************************************************************/
 /****************************** Local Functions ****************************/
 /***************************************************************************/
-
+/**
+ * remapValues a value from one range to another.
+ * @param: The value to remapValue.
+ * @param: The lower bound of the input range.
+ * @param: The upper bound of the input range.
+ * @param: The lower bound of the output range.
+ * @param: The upper bound of the output range.
+ * @return The remapValueped value within the output range.
+ */
+uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min, uint16_t out_max)
+{
+  return (x - in_min) * (out_max - out_min + 1) / (in_max - in_min + 1) + out_min;
+}
 
 /***************************************************************************/
 
@@ -578,13 +623,75 @@ Module_Status GetModuleParameter(uint8_t paramIndex, float *value) {
 /***************************************************************************/
 /***************************** General Functions ***************************/
 /***************************************************************************/
-
+/**
+ * @brief Turn on the selected motor (sets PWM output to max ESC value).
+ * @param motor  Motor index (MOTOR_1 to MOTOR_6).
+ * @retval H14RA_OK on success, error code otherwise.
+ */
+Module_Status escTurnOnMotor(Motor motor) {
+	if (motor > MOTOR_6 || motor < MOTOR_1) {
+		return H14RA_ERR_INVALID_MOTOR;
+	}
+	if (!(escPwmStartedFlags & (1 << motor))){
+		if (HAL_TIM_PWM_Start(motors[motor].htim, motors[motor].channel) != HAL_OK) {
+			return H14RA_ERROR;
+		}
+		/*Set the Flag after PWM started*/
+		escPwmStartedFlags |= (1 << motor);
+	}
+	/*Set Capture Compare Register(CCRx) to max ESC value */
+	*(motors[motor].CCRx) = MAX_ESC_CCR_VALUE;
+	return H14RA_OK;
+}
 
 /***************************************************************************/
-
+/**
+ * @brief Turn off the selected motor (stops PWM and clears output).
+ * @param motor  Motor index (MOTOR_1 to MOTOR_6).
+ * @retval H14RA_OK on success, error code otherwise.
+ */
+Module_Status escTurnOffMotor(Motor motor){
+	if (motor > MOTOR_6 || motor < MOTOR_1 ){
+		return H14RA_ERR_INVALID_MOTOR;
+	}
+	/*Stop generate PWM*/
+	if(HAL_TIM_PWM_Stop(motors[motor].htim, motors[motor].channel) != HAL_OK ){
+		return H14RA_ERROR;
+	}
+	else{
+		/*Reset Capture Compare Register to disable the output*/
+		*(motors[motor].CCRx) = 0;
+		/*Reset the Flag after PWM stopped */
+		escPwmStartedFlags &= !(1 << motor);
+		return H14RA_OK;
+	}
+}
 
 /***************************************************************************/
-
+/**
+ * @brief Set the speed (duty cycle) of a motor
+ * @param motor      Motor index (MOTOR_1 to MOTOR_6).
+ * @param dutyCycle  Duty cycle percentage (0 to 100).
+ * @retval H14RA_OK on success, error code otherwise.
+ */
+Module_Status escSetSpeedMotor(Motor motor, uint8_t dutyCycle) {
+	if (motor > MOTOR_6 || motor < MOTOR_1) {
+		return H14RA_ERR_INVALID_MOTOR;
+	}
+	if (dutyCycle > MAX_DUTY_CYCLE || dutyCycle < MIN_DUTY_CYCLE) {
+		return H14RA_ERR_WRONGPARAMS;
+	} else {
+		if (!(escPwmStartedFlags & (1 << motor))) {
+			if (HAL_TIM_PWM_Start(motors[motor].htim, motors[motor].channel)!= HAL_OK) {
+				return H14RA_ERROR;
+			}
+			/*Set the Flag after PWM started*/
+			 escPwmStartedFlags |= (1 << motor);
+		}
+		*(motors[motor].CCRx) = RemapValue(dutyCycle, MIN_DUTY_CYCLE,MAX_DUTY_CYCLE, MIN_ESC_CCR_VALUE, MAX_ESC_CCR_VALUE);
+		return H14RA_OK;
+	}
+}
 
 /***************************************************************************/
 

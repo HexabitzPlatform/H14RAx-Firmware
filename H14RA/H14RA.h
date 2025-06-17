@@ -101,15 +101,83 @@
 
 /* Module-specific Macro Definitions ***************************************/
 #define NUM_MODULE_PARAMS		1
-
+/*
+ *  ESC_FPWM_CLK =  F_clk /((Period(ARR) + 1 ) * (Prescaler + 1))
+ *  50 HZ = 64MHZ / ((Period + 1 ) * ( 6399 + 1 )) --> Period = 200 - 1 = 199‬
+ */
+#define TIMER_PRESCALER     ((uint16_t)6399)
+/*Auto Reload Register(ARR)*/
+#define TIMER_PERIOD        ((uint16_t)199)
+/*Frequency of ESC(Electrical Speed Control)circuit for BLDC motors[HZ]*/
+#define ESC_FPWM_CLK        ((uint8_t)50)
+/*Period of ESC(Electrical Speed Control) circuit for BLDC motors[Second]*/
+#define ESC_TPWM_PERIOD     (1.0f/ESC_FPWM_CLK)
+/*This value corresponds to the MAX width of pulse = 2 ms*/
+#define MAX_ESC_TIME_PERIOD ((uint8_t)2)
+/*This value corresponds to the MIN width of pulse = 1 ms*/
+#define MIN_ESC_TIME_PERIOD ((uint8_t)1)
+/*This value of CCR(Capture Compare Register Timer) which corresponds to the MAX width of pulse,
+ * and which will make the Motor run at the highest speed.
+ * Duty cycle[%] = CCRx / ARR(Period) ---> CCRx(MAX) = Duty cycle[%] * ARR(Period) = MAX_ESC_TIME_PERIOD[ms]/ESC_TPWM_PERIOD[ms] * ARR(Period)
+ **/
+#define MAX_ESC_CCR_VALUE   round((MAX_ESC_TIME_PERIOD/(ESC_TPWM_PERIOD*1000))* TIMER_PERIOD)
+/*This value of CCR(Capture Compare Register Timer) which corresponds to the MIN width of pulse,
+ * and which will make the Motor run at the lowest speed.
+ * Duty cycle[%] = CCRx / ARR(Period) ---> CCRx(MIN) = Duty cycle[%] * ARR(Period) = MIN_ESC_TIME_PERIOD[ms]/ESC_TPWM_PERIOD[ms] * ARR(Period)
+ **/
+#define MIN_ESC_CCR_VALUE   round((MIN_ESC_TIME_PERIOD/(ESC_TPWM_PERIOD*1000))* TIMER_PERIOD)
+/*Numbers of Motors and output of PWM can be connected to this module*/
+#define NUM_MOTORS          ((uint8_t) 6)
+#define NUM_OUTS            ((uint8_t) 6)
+#define MAX_DUTY_CYCLE      ((uint8_t)100)
+#define MIN_DUTY_CYCLE      ((uint8_t)0)
+/*htim timers handlers*/
+#define TIMER_HANDLE_OUT1 htim1
+#define TIMER_HANDLE_OUT2 htim15
+#define TIMER_HANDLE_OUT3 htim3
+#define TIMER_HANDLE_OUT4 htim2
+#define TIMER_HANDLE_OUT5 htim3
+#define TIMER_HANDLE_OUT6 htim4
+/*Channels of the timers*/
+#define TIMER_CHANAL_OUT1 TIM_CHANNEL_4
+#define TIMER_CHANAL_OUT2 TIM_CHANNEL_1
+#define TIMER_CHANAL_OUT3 TIM_CHANNEL_4
+#define TIMER_CHANAL_OUT4 TIM_CHANNEL_1
+#define TIMER_CHANAL_OUT5 TIM_CHANNEL_2
+#define TIMER_CHANAL_OUT6 TIM_CHANNEL_4
+/*CCR(Capture Compare Register) of the Timers*/
+#define TIMER_CCR_OUT1 TIM1->CCR4
+#define TIMER_CCR_OUT2 TIM15->CCR1
+#define TIMER_CCR_OUT3 TIM3->CCR4
+#define TIMER_CCR_OUT4 TIM2->CCR1
+#define TIMER_CCR_OUT5 TIM3->CCR2
+#define TIMER_CCR_OUT6 TIM4->CCR4
 /* Module-specific Enumeration Definitions *********************************/
-
-
+typedef enum {
+    MOTOR_1 = 0,
+    MOTOR_2,
+    MOTOR_3,
+    MOTOR_4,
+    MOTOR_5,
+    MOTOR_6
+} Motor_t;
+typedef enum {
+    OUT_1 = 0,
+	OUT_2,
+	OUT_3,
+	OUT_4,
+	OUT_5,
+	OUT_6
+} ChannelOut_t;
 /* Module-specific Type Definition *****************************************/
 /* Module-status Type Definition */
 typedef enum {
 	H14RA_OK = 0,
 	H14RA_ERR_UNKNOWNMESSAGE,
+	H14RA_ERR_WRONGPARAMS,
+	H14RA_ERR_INVALID_MOTOR,
+	H14RA_ERR_INVALID_OUT_CHANNEL,
+	H14RA_ERR_INVALID_FREQ,
 	H14RA_ERROR = 255
 } Module_Status;
 

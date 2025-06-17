@@ -29,16 +29,9 @@ int main(void){
 void UserTask(void *argument){
 
 
-//	 ADCSelectPort(P2);
-//	 ADCSelectPort(P3);
 
 	/* put your code here, to run repeatedly. */
 	while(1){
-
-//	ReadADCChannel(P2,"top",&adcalue1);
-//	ReadADCChannel(P2,"bottom",&adcalue2);
-//	ReadADCChannel(P3,"top",&adcalue3);
-//	ReadADCChannel(P3,"bottom",&adcalue4);
 
 	}
 }

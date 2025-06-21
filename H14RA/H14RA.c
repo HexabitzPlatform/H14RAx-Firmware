@@ -90,11 +90,19 @@ Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src, uin
 uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min, uint16_t out_max);
 
 /* Create CLI commands *****************************************************/
-
+portBASE_TYPE escTurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+//portBASE_TYPE escTurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+//portBASE_TYPE escSetSpeedMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+//portBASE_TYPE pwmGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* CLI command structure ***************************************************/
-
-
+/* CLI command structure : escTurnOnMotor */
+const CLI_Command_Definition_t escTurnOnMotorDefinition = {
+	( const int8_t * ) "turn_on", /* The command string to type. */
+	( const int8_t * ) "turn_on:\r\nTurn on the selected motor(motor_1 to motor_6)(1st par.) to max speed(MAX ESC value):\n\r",
+	escTurnOnMotorCommand, /* The function to run. */
+	1 /* one parameters are expected. */
+};
 
 /***************************************************************************/
 /************************ Private function Definitions *********************/
@@ -567,8 +575,7 @@ uint8_t GetPort(UART_HandleTypeDef *huart) {
 /***************************************************************************/
 /* Register this module CLI Commands */
 void RegisterModuleCLICommands(void) {
-
-
+	FreeRTOS_CLIRegisterCommand(&escTurnOnMotorDefinition);
 }
 
 /***************************************************************************/
@@ -761,7 +768,42 @@ Module_Status pwmGenerate(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
 /***************************************************************************/
 /********************************* Commands ********************************/
 /***************************************************************************/
+portBASE_TYPE escTurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
+	Module_Status status = H14RA_OK;
+	Motor motor = H14RA_ERROR;
+	int8_t *pcParameterString1;
+	portBASE_TYPE xParameterStringLength1 = 0;
+	static const int8_t *pcOKMessage = (int8_t*) "The motor_%d is turned on at Max speed\r\n";
+	static const int8_t *pcWrongMotorMessage = (int8_t*) "Invalid Motor!\n\r";
 
+	(void )xWriteBufferLen;
+	configASSERT(pcWriteBuffer);
+	/* Obtain the 1st parameter string. */
+	pcParameterString1 =(int8_t* )FreeRTOS_CLIGetParameter(pcCommandString,1,&xParameterStringLength1);
+	/*Read the Motor value*/
+	if (!strncmp((char*)pcParameterString1, "motor_1", xParameterStringLength1)) {
+	    motor = MOTOR_1;
+	} else if (!strncmp((char*)pcParameterString1, "motor_2", xParameterStringLength1)) {
+	    motor = MOTOR_2;
+	} else if (!strncmp((char*)pcParameterString1, "motor_3", xParameterStringLength1)) {
+	    motor = MOTOR_3;
+	} else if (!strncmp((char*)pcParameterString1, "motor_4", xParameterStringLength1)) {
+	    motor = MOTOR_4;
+	} else if (!strncmp((char*)pcParameterString1, "motor_5", xParameterStringLength1)) {
+	    motor = MOTOR_5;
+	} else if (!strncmp((char*)pcParameterString1, "motor_6", xParameterStringLength1)) {
+	    motor = MOTOR_6;
+	}
+
+	status = escTurnOnMotor(motor);
+	if(status == H14RA_OK){
+		sprintf((char* )pcWriteBuffer,(char* )pcOKMessage,motor+1);
+	}
+	else if(status == H14RA_ERR_INVALID_MOTOR){
+		strcpy((char* )pcWriteBuffer,(char* )pcWrongMotorMessage);
+	}
+	return pdFALSE;
+}
 
 /***************************************************************************/
 

@@ -98,29 +98,29 @@ portBASE_TYPE pwmGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 /* CLI command structure ***************************************************/
 /* CLI command structure : escTurnOnMotor */
 const CLI_Command_Definition_t escTurnOnMotorDefinition = {
-	( const int8_t * ) "turn_on", /* The command string to type. */
-	( const int8_t * ) "turn_on:\r\nTurn on the selected motor(motor_1 to motor_6)(1st par.) to max speed(MAX ESC value):\n\n\r",
+	( const int8_t * ) "on", /* The command string to type. */
+	( const int8_t * ) "on:\r\nTurn on the selected motor(m1 to m6)(1st par.) to max speed(MAX ESC value):\n\n\r",
 	escTurnOnMotorCommand, /* The function to run. */
 	1 /* one parameters are expected. */
 };
 /* CLI command structure : escTurnOffMotor */
 const CLI_Command_Definition_t escTurnOffMotorDefinition = {
-	( const int8_t * ) "turn_off", /* The command string to type. */
-	( const int8_t * ) "turn_off:\r\nTurn off the selected motor(motor_1 to motor_6)(1st par.)\n\n\r",
+	( const int8_t * ) "off", /* The command string to type. */
+	( const int8_t * ) "off:\r\nTurn off the selected motor(m1 to m6)(1st par.)\n\n\r",
 	escTurnOffMotorCommand, /* The function to run. */
 	1 /* one parameters are expected. */
 };
 /* CLI command structure : escSetSpeedMotor */
 const CLI_Command_Definition_t escSetSpeedMotorDefinition = {
-	( const int8_t * ) "set_speed", /* The command string to type. */
-	( const int8_t * ) "set_speed:\r\nSet speed of the selected motor(motor_1 to motor_6)(1st par.),with required speed(0% up to 100%)(2st par.)\n\n\r",
-	pwmGenerateCommand, /* The function to run. */
+	( const int8_t * ) "speed", /* The command string to type. */
+	( const int8_t * ) "speed:\r\nSet speed of the selected motor(m1 to m6)(1st par.),with required speed(0% up to 100%)(2st par.)\n\n\r",
+	escSetSpeedMotorCommand, /* The function to run. */
 	2 /* tow parameters are expected. */
 };
 /*CLI command structure : pwmGenerate */
 const CLI_Command_Definition_t pwmGenerateDefinition = {
-	( const int8_t * ) "pwm_generate", /* The command string to type. */
-	( const int8_t * ) "pwm_generate:\r\nGenerate a PWM signal on a selected output(out_1 to out_6)(1st par.), with a specified frequency[HZ](2st par.), and duty cycle(0% up to 100%)(3st par.)\n\n\r",
+	( const int8_t * ) "pwm", /* The command string to type. */
+	( const int8_t * ) "pwm:\r\nGenerate a PWM signal on a selected output(out1 to out6)(1st par.), with a specified frequency[HZ](2st par.), and duty cycle(0% up to 100%)(3st par.)\n\n\r",
 	pwmGenerateCommand, /* The function to run. */
 	3 /* three parameters are expected. */
 };
@@ -804,17 +804,17 @@ portBASE_TYPE escTurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 	/* Obtain the 1st parameter string. */
 	pcParameterString1 =(int8_t* )FreeRTOS_CLIGetParameter(pcCommandString,1,&xParameterStringLength1);
 	/*Read the Motor value*/
-	if (!strncmp((char*)pcParameterString1, "motor_1", xParameterStringLength1)) {
+	if (!strncmp((char*)pcParameterString1, "m1", strlen("m1"))) {
 	    motor = MOTOR_1;
-	} else if (!strncmp((char*)pcParameterString1, "motor_2", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m2", strlen("m2"))) {
 	    motor = MOTOR_2;
-	} else if (!strncmp((char*)pcParameterString1, "motor_3", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m3", strlen("m3"))) {
 	    motor = MOTOR_3;
-	} else if (!strncmp((char*)pcParameterString1, "motor_4", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m4", strlen("m4"))) {
 	    motor = MOTOR_4;
-	} else if (!strncmp((char*)pcParameterString1, "motor_5", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m5", strlen("m5"))) {
 	    motor = MOTOR_5;
-	} else if (!strncmp((char*)pcParameterString1, "motor_6", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m6", strlen("m6"))) {
 	    motor = MOTOR_6;
 	}
 
@@ -842,17 +842,17 @@ portBASE_TYPE escTurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
 	/* Obtain the 1st parameter string. */
 	pcParameterString1 =(int8_t* )FreeRTOS_CLIGetParameter(pcCommandString,1,&xParameterStringLength1);
 	/*Read the Motor value*/
-	if (!strncmp((char*)pcParameterString1, "motor_1", xParameterStringLength1)) {
+	if (!strncmp((char*)pcParameterString1, "m1", strlen("m1"))) {
 	    motor = MOTOR_1;
-	} else if (!strncmp((char*)pcParameterString1, "motor_2", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m2", strlen("m2"))) {
 	    motor = MOTOR_2;
-	} else if (!strncmp((char*)pcParameterString1, "motor_3", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m3", strlen("m3"))) {
 	    motor = MOTOR_3;
-	} else if (!strncmp((char*)pcParameterString1, "motor_4", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m4", strlen("m4"))) {
 	    motor = MOTOR_4;
-	} else if (!strncmp((char*)pcParameterString1, "motor_5", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m5", strlen("m5"))) {
 	    motor = MOTOR_5;
-	} else if (!strncmp((char*)pcParameterString1, "motor_6", xParameterStringLength1)) {
+	} else if (!strncmp((char*)pcParameterString1, "m6", strlen("m6"))) {
 	    motor = MOTOR_6;
 	}
 
@@ -885,17 +885,17 @@ portBASE_TYPE escSetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferL
 	/* Obtain the 1st parameter string. */
 	pcParameterString1 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 1,&xParameterStringLength1);
 	/*Read the Motor value*/
-	if (!strncmp((char*) pcParameterString1, "motor_1",xParameterStringLength1)) {
+	if (!strncmp((char*) pcParameterString1, "m1",strlen("m1"))) {
 		motor = MOTOR_1;
-	} else if (!strncmp((char*) pcParameterString1, "motor_2",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "m2",strlen("m2"))) {
 		motor = MOTOR_2;
-	} else if (!strncmp((char*) pcParameterString1, "motor_3",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "m3",strlen("m3"))) {
 		motor = MOTOR_3;
-	} else if (!strncmp((char*) pcParameterString1, "motor_4",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "m4",strlen("m4"))) {
 		motor = MOTOR_4;
-	} else if (!strncmp((char*) pcParameterString1, "motor_5",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "m5",strlen("m5"))) {
 		motor = MOTOR_5;
-	} else if (!strncmp((char*) pcParameterString1, "motor_6",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "m6",strlen("m6"))) {
 		motor = MOTOR_6;
 	}
 	/* Obtain the 2st parameter string. */
@@ -937,17 +937,17 @@ portBASE_TYPE pwmGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 	/* Obtain the 1st parameter string. */
 	pcParameterString1 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 1,&xParameterStringLength1);
 	/*Read the Motor value*/
-	if (!strncmp((char*) pcParameterString1, "out_1",xParameterStringLength1)) {
+	if (!strncmp((char*) pcParameterString1, "out1",strlen("out1"))) {
 		out = OUT_1;
-	} else if (!strncmp((char*) pcParameterString1, "out_2",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "out2",strlen("out2"))) {
 		out = OUT_2;
-	} else if (!strncmp((char*) pcParameterString1, "out_3",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "out3",strlen("out3"))) {
 		out = OUT_3;
-	} else if (!strncmp((char*) pcParameterString1, "out_4",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "out4",strlen("out4"))) {
 		out = OUT_4;
-	} else if (!strncmp((char*) pcParameterString1, "out_5",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "out5",strlen("out5"))) {
 		out = OUT_5;
-	} else if (!strncmp((char*) pcParameterString1, "out_6",xParameterStringLength1)) {
+	} else if (!strncmp((char*) pcParameterString1, "out6",strlen("out6"))) {
 		out = OUT_6;
 	}
 	/* Obtain the 2st parameter string. */

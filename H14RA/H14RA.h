@@ -132,7 +132,7 @@
 #define MAX_DUTY_CYCLE      ((uint8_t)100)
 #define MIN_DUTY_CYCLE      ((uint8_t)0)
 /*Max frequency value that can be generated at the output in [HZ].*/
-#define MAX_FREQ_OUT        ((uint32_t)70000)
+#define MAX_FREQ_OUT        ((uint32_t)50000)
 /*htim timers handlers*/
 #define TIMER_HANDLE_OUT1 htim1
 #define TIMER_HANDLE_OUT2 htim15

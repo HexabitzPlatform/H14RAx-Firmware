@@ -92,8 +92,8 @@ uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min,
 /* Create CLI commands *****************************************************/
 portBASE_TYPE escTurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 portBASE_TYPE escTurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-//portBASE_TYPE escSetSpeedMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-//portBASE_TYPE pwmGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE escSetSpeedMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE pwmGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* CLI command structure ***************************************************/
 /* CLI command structure : escTurnOnMotor */
@@ -109,6 +109,20 @@ const CLI_Command_Definition_t escTurnOffMotorDefinition = {
 	( const int8_t * ) "turn_off:\r\nTurn off the selected motor(motor_1 to motor_6)(1st par.)\n\n\r",
 	escTurnOffMotorCommand, /* The function to run. */
 	1 /* one parameters are expected. */
+};
+/* CLI command structure : escSetSpeedMotor */
+const CLI_Command_Definition_t escSetSpeedMotorDefinition = {
+	( const int8_t * ) "set_speed", /* The command string to type. */
+	( const int8_t * ) "set_speed:\r\nSet speed of the selected motor(motor_1 to motor_6)(1st par.),with required speed(0% up to 100%)(2st par.)\n\n\r",
+	pwmGenerateCommand, /* The function to run. */
+	2 /* tow parameters are expected. */
+};
+/*CLI command structure : pwmGenerate */
+const CLI_Command_Definition_t pwmGenerateDefinition = {
+	( const int8_t * ) "pwm_generate", /* The command string to type. */
+	( const int8_t * ) "pwm_generate:\r\nGenerate a PWM signal on a selected output(out_1 to out_6)(1st par.), with a specified frequency[HZ](2st par.), and duty cycle(0% up to 100%)(3st par.)\n\n\r",
+	pwmGenerateCommand, /* The function to run. */
+	3 /* three parameters are expected. */
 };
 /***************************************************************************/
 /************************ Private function Definitions *********************/
@@ -583,6 +597,8 @@ uint8_t GetPort(UART_HandleTypeDef *huart) {
 void RegisterModuleCLICommands(void) {
 	FreeRTOS_CLIRegisterCommand(&escTurnOnMotorDefinition);
 	FreeRTOS_CLIRegisterCommand(&escTurnOffMotorDefinition);
+	FreeRTOS_CLIRegisterCommand(&escSetSpeedMotorDefinition);
+	FreeRTOS_CLIRegisterCommand(&pwmGenerateDefinition);
 }
 
 /***************************************************************************/
@@ -851,10 +867,108 @@ portBASE_TYPE escTurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
 }
 
 /***************************************************************************/
+portBASE_TYPE escSetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferLen, const int8_t *pcCommandString) {
+	Module_Status status = H14RA_OK;
+	Motor motor = H14RA_ERROR;
+	uint8_t dutyCycle = 0;
+	int8_t *pcParameterString1;
+	int8_t *pcParameterString2;
+	portBASE_TYPE xParameterStringLength1 = 0;
+	portBASE_TYPE xParameterStringLength2 = 0;
 
+	static const int8_t *pcOKMessage = (int8_t*) "The motor_%d started running at speed:%d%%\r\n";
+	static const int8_t *pcWrongMotorMessage = (int8_t*) "Invalid Motor!\n\r";
+	static const int8_t *pcWrongDutyCycleMessage = (int8_t*) "Invalid dutyCycle(out of the Rang)!\n\r";
+
+	(void) xWriteBufferLen;
+	configASSERT(pcWriteBuffer);
+	/* Obtain the 1st parameter string. */
+	pcParameterString1 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 1,&xParameterStringLength1);
+	/*Read the Motor value*/
+	if (!strncmp((char*) pcParameterString1, "motor_1",xParameterStringLength1)) {
+		motor = MOTOR_1;
+	} else if (!strncmp((char*) pcParameterString1, "motor_2",xParameterStringLength1)) {
+		motor = MOTOR_2;
+	} else if (!strncmp((char*) pcParameterString1, "motor_3",xParameterStringLength1)) {
+		motor = MOTOR_3;
+	} else if (!strncmp((char*) pcParameterString1, "motor_4",xParameterStringLength1)) {
+		motor = MOTOR_4;
+	} else if (!strncmp((char*) pcParameterString1, "motor_5",xParameterStringLength1)) {
+		motor = MOTOR_5;
+	} else if (!strncmp((char*) pcParameterString1, "motor_6",xParameterStringLength1)) {
+		motor = MOTOR_6;
+	}
+	/* Obtain the 2st parameter string. */
+	pcParameterString2 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 2,&xParameterStringLength2);
+	dutyCycle = (uint8_t) atol((char*) pcParameterString2);
+
+	status = escSetSpeedMotor(motor, dutyCycle);
+	if (status == H14RA_OK) {
+		sprintf((char*) pcWriteBuffer, (char*) pcOKMessage, motor + 1,dutyCycle);
+	} else if (status == H14RA_ERR_INVALID_MOTOR) {
+		strcpy((char*) pcWriteBuffer, (char*) pcWrongMotorMessage);
+	} else if (status == H14RA_ERR_WRONGPARAMS) {
+		strcpy((char*) pcWriteBuffer, (char*) pcWrongDutyCycleMessage);
+	}
+	return pdFALSE;
+}
 
 /***************************************************************************/
+portBASE_TYPE pwmGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
+	Module_Status status = H14RA_OK;
+	ChannelOut out = H14RA_ERROR;
+	uint8_t dutyCycle = 0;
+	uint32_t freq_Hz = 0 ;
+	int8_t *pcParameterString1;
+	int8_t *pcParameterString2;
+	int8_t *pcParameterString3;
+	portBASE_TYPE xParameterStringLength1 = 0;
+	portBASE_TYPE xParameterStringLength2 = 0;
+	portBASE_TYPE xParameterStringLength3 = 0;
 
+	static const int8_t *pcOKMessage = (int8_t*) "The out_%d channel started running at frequency:%dHZ with duty cycle:%d%%\r\n";
+	static const int8_t *pcWrongOutChannelMessage = (int8_t*) "Invalid channel!\n\r";
+	static const int8_t *pcWrongDutyCycleMessage = (int8_t*) "Invalid dutyCycle(out of the Rang)!\n\r";
+	static const int8_t *pcWrongFrequencyMessage = (int8_t*) "Invalid frequency(out of the Rang)!\n\r";
+
+	(void) xWriteBufferLen;
+	configASSERT(pcWriteBuffer);
+
+	/* Obtain the 1st parameter string. */
+	pcParameterString1 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 1,&xParameterStringLength1);
+	/*Read the Motor value*/
+	if (!strncmp((char*) pcParameterString1, "out_1",xParameterStringLength1)) {
+		out = OUT_1;
+	} else if (!strncmp((char*) pcParameterString1, "out_2",xParameterStringLength1)) {
+		out = OUT_2;
+	} else if (!strncmp((char*) pcParameterString1, "out_3",xParameterStringLength1)) {
+		out = OUT_3;
+	} else if (!strncmp((char*) pcParameterString1, "out_4",xParameterStringLength1)) {
+		out = OUT_4;
+	} else if (!strncmp((char*) pcParameterString1, "out_5",xParameterStringLength1)) {
+		out = OUT_5;
+	} else if (!strncmp((char*) pcParameterString1, "out_6",xParameterStringLength1)) {
+		out = OUT_6;
+	}
+	/* Obtain the 2st parameter string. */
+	pcParameterString2 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 2,&xParameterStringLength2);
+	freq_Hz = (uint32_t) atol((char*) pcParameterString2);
+	/* Obtain the 3st parameter string. */
+	pcParameterString3 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 3,&xParameterStringLength3);
+	dutyCycle = (uint8_t) atol((char*) pcParameterString3);
+
+	status = pwmGenerate(out, freq_Hz, dutyCycle);
+	if (status == H14RA_OK) {
+		sprintf((char*) pcWriteBuffer, (char*) pcOKMessage, out + 1, freq_Hz, dutyCycle);
+	} else if (status == H14RA_ERR_INVALID_OUT_CHANNEL) {
+		strcpy((char*) pcWriteBuffer, (char*) pcWrongOutChannelMessage);
+	} else if (status == H14RA_ERR_INVALID_FREQ) {
+		strcpy((char*) pcWriteBuffer, (char*) pcWrongFrequencyMessage);
+	} else if (status == H14RA_ERR_WRONGPARAMS) {
+		strcpy((char*) pcWriteBuffer, (char*) pcWrongDutyCycleMessage);
+	}
+	return pdFALSE;
+}
 
 /***************************************************************************/
 

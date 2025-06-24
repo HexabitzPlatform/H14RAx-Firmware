@@ -58,6 +58,13 @@
 #define UART_P6 &huart5
 
 /* Module-specific Hardware Definitions ************************************/
+/* Define TIMERS handle variables */
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim15;
+
 /* Port Definitions */
 #define	USART1_TX_PIN		GPIO_PIN_9
 #define	USART1_RX_PIN		GPIO_PIN_10
@@ -95,6 +102,44 @@
 #define	USART6_RX_PORT		GPIOA
 #define	USART6_AF			GPIO_AF3_USART6
 
+/*PINs and PORTs of the Timers*/
+#define TIMER_OUT1_PIN  GPIO_PIN_11
+#define TIMER_OUT1_PORT GPIOA
+#define TIMER_OUT2_PIN  GPIO_PIN_14
+#define TIMER_OUT2_PORT GPIOB
+#define TIMER_OUT3_PIN  GPIO_PIN_1
+#define TIMER_OUT3_PORT GPIOB
+#define TIMER_OUT4_PIN  GPIO_PIN_15
+#define TIMER_OUT4_PORT GPIOA
+#define TIMER_OUT5_PIN  GPIO_PIN_5
+#define TIMER_OUT5_PORT GPIOB
+#define TIMER_OUT6_PIN  GPIO_PIN_9
+#define TIMER_OUT6_PORT GPIOB
+
+/*htim timers handlers*/
+#define TIMER_HANDLE_OUT1 htim1
+#define TIMER_HANDLE_OUT2 htim15
+#define TIMER_HANDLE_OUT3 htim3
+#define TIMER_HANDLE_OUT4 htim2
+#define TIMER_HANDLE_OUT5 htim3
+#define TIMER_HANDLE_OUT6 htim4
+
+/*Channels of the timers*/
+#define TIMER_CHANAL_OUT1 TIM_CHANNEL_4
+#define TIMER_CHANAL_OUT2 TIM_CHANNEL_1
+#define TIMER_CHANAL_OUT3 TIM_CHANNEL_4
+#define TIMER_CHANAL_OUT4 TIM_CHANNEL_1
+#define TIMER_CHANAL_OUT5 TIM_CHANNEL_2
+#define TIMER_CHANAL_OUT6 TIM_CHANNEL_4
+
+/*CCR(Capture Compare Register) of the Timers*/
+#define TIMER_CCR_OUT1 TIM1->CCR4
+#define TIMER_CCR_OUT2 TIM15->CCR1
+#define TIMER_CCR_OUT3 TIM3->CCR4
+#define TIMER_CCR_OUT4 TIM2->CCR1
+#define TIMER_CCR_OUT5 TIM3->CCR2
+#define TIMER_CCR_OUT6 TIM4->CCR4
+
 /* Indicator LED */
 #define _IND_LED_PORT		GPIOB
 #define _IND_LED_PIN		GPIO_PIN_15
@@ -116,16 +161,19 @@
 #define MAX_ESC_TIME_PERIOD ((uint8_t)2)
 /*This value corresponds to the MIN width of pulse = 1 ms*/
 #define MIN_ESC_TIME_PERIOD ((uint8_t)1)
+
 /*This value of CCR(Capture Compare Register Timer) which corresponds to the MAX width of pulse,
  * and which will make the Motor run at the highest speed.
  * Duty cycle[%] = CCRx / ARR(Period) ---> CCRx(MAX) = Duty cycle[%] * ARR(Period) = MAX_ESC_TIME_PERIOD[ms]/ESC_TPWM_PERIOD[ms] * ARR(Period)
  **/
 #define MAX_ESC_CCR_VALUE   round((MAX_ESC_TIME_PERIOD/(ESC_TPWM_PERIOD*1000))* TIMER_PERIOD)
+
 /*This value of CCR(Capture Compare Register Timer) which corresponds to the MIN width of pulse,
  * and which will make the Motor run at the lowest speed.
  * Duty cycle[%] = CCRx / ARR(Period) ---> CCRx(MIN) = Duty cycle[%] * ARR(Period) = MIN_ESC_TIME_PERIOD[ms]/ESC_TPWM_PERIOD[ms] * ARR(Period)
  **/
 #define MIN_ESC_CCR_VALUE   round((MIN_ESC_TIME_PERIOD/(ESC_TPWM_PERIOD*1000))* TIMER_PERIOD)
+
 /*Numbers of Motors and output of PWM can be connected to this module*/
 #define NUM_MOTORS          ((uint8_t) 6)
 #define NUM_OUTS            ((uint8_t) 6)
@@ -133,41 +181,22 @@
 #define MIN_DUTY_CYCLE      ((uint8_t)0)
 /*Max frequency value that can be generated at the output in [HZ].*/
 #define MAX_FREQ_OUT        ((uint32_t)50000)
-/*htim timers handlers*/
-#define TIMER_HANDLE_OUT1 htim1
-#define TIMER_HANDLE_OUT2 htim15
-#define TIMER_HANDLE_OUT3 htim3
-#define TIMER_HANDLE_OUT4 htim2
-#define TIMER_HANDLE_OUT5 htim3
-#define TIMER_HANDLE_OUT6 htim4
-/*Channels of the timers*/
-#define TIMER_CHANAL_OUT1 TIM_CHANNEL_4
-#define TIMER_CHANAL_OUT2 TIM_CHANNEL_1
-#define TIMER_CHANAL_OUT3 TIM_CHANNEL_4
-#define TIMER_CHANAL_OUT4 TIM_CHANNEL_1
-#define TIMER_CHANAL_OUT5 TIM_CHANNEL_2
-#define TIMER_CHANAL_OUT6 TIM_CHANNEL_4
-/*CCR(Capture Compare Register) of the Timers*/
-#define TIMER_CCR_OUT1 TIM1->CCR4
-#define TIMER_CCR_OUT2 TIM15->CCR1
-#define TIMER_CCR_OUT3 TIM3->CCR4
-#define TIMER_CCR_OUT4 TIM2->CCR1
-#define TIMER_CCR_OUT5 TIM3->CCR2
-#define TIMER_CCR_OUT6 TIM4->CCR4
-/*PINs and PORTs of the Timers*/
-#define TIMER_OUT1_PIN  GPIO_PIN_11
-#define TIMER_OUT1_PORT GPIOA
-#define TIMER_OUT2_PIN  GPIO_PIN_14
-#define TIMER_OUT2_PORT GPIOB
-#define TIMER_OUT3_PIN  GPIO_PIN_1
-#define TIMER_OUT3_PORT GPIOB
-#define TIMER_OUT4_PIN  GPIO_PIN_15
-#define TIMER_OUT4_PORT GPIOA
-#define TIMER_OUT5_PIN  GPIO_PIN_5
-#define TIMER_OUT5_PORT GPIOB
-#define TIMER_OUT6_PIN  GPIO_PIN_9
-#define TIMER_OUT6_PORT GPIOB
+
+/*Structure for configuring a motor or PWM output channel.*/
+typedef struct {
+    TIM_HandleTypeDef* htim;
+    uint32_t channel;
+    volatile uint32_t* CCRx;
+} MotorConfig_t;
+
+/*External declaration of the motor configuration array*/
+extern const MotorConfig_t motors[];
+
+/*External declaration of the generic PWM output channel configuration array*/
+extern const MotorConfig_t ChannelsOut[];
+
 /* Module-specific Enumeration Definitions *********************************/
+/*Enumeration of the name specified motor that will be run with ESC circuit*/
 typedef enum {
     MOTOR_1 = 0,
     MOTOR_2,
@@ -176,6 +205,8 @@ typedef enum {
     MOTOR_5,
     MOTOR_6
 } Motor;
+
+/*Enumeration of the name specified output that will be generate PWM signal*/
 typedef enum {
     OUT_1 = 0,
 	OUT_2,
@@ -184,6 +215,7 @@ typedef enum {
 	OUT_5,
 	OUT_6
 } ChannelOut;
+
 /* Module-specific Type Definition *****************************************/
 /* Module-status Type Definition */
 typedef enum {

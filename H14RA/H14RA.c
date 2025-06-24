@@ -25,6 +25,7 @@ UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart6;
+
 /* Define TIMERS handle variables */
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
@@ -33,12 +34,6 @@ TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim15;
 
 /* Private Variables *******************************************************/
-/*Structure for configuring a motor or PWM output channel.*/
-typedef struct {
-    TIM_HandleTypeDef* htim;
-    uint32_t channel;
-    volatile uint32_t* CCRx;
-} MotorConfig_t;
 /**
  * Motor configurations for up to 6 motors.
  * Each entry defines the timer handle, channel, and CCR register
@@ -61,6 +56,7 @@ const MotorConfig_t ChannelsOut[] = {
     { &TIMER_HANDLE_OUT5, TIMER_CHANAL_OUT5, &TIMER_CCR_OUT5 },
     { &TIMER_HANDLE_OUT6, TIMER_CHANAL_OUT6, &TIMER_CCR_OUT6 }
 };
+
 /*Bitmask flags to track which ESC channels have started PWM.*/
 uint16_t escPwmStartedFlags = 0U;
 /*Bitmask flags to track which general output channels have started PWM*/
@@ -565,6 +561,7 @@ Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src,uint
 	uint32_t freq_Hz = 0;
 
 	switch (code) {
+
 	case CODE_H14RA_ON:
 		motor = (uint8_t) cMessage[port - 1][shift];
 		escTurnOnMotor(motor - 1);
@@ -654,11 +651,11 @@ Module_Status GetModuleParameter(uint8_t paramIndex, float *value) {
 /***************************************************************************/
 /**
  * remapValues a value from one range to another.
- * @param: The value to remapValue.
- * @param: The lower bound of the input range.
- * @param: The upper bound of the input range.
- * @param: The lower bound of the output range.
- * @param: The upper bound of the output range.
+ * x: The value to remapValue.
+ * in_min: The lower bound of the input range.
+ * in_max: The upper bound of the input range.
+ * out_min: The lower bound of the output range.
+ * out_max: The upper bound of the output range.
  * @return The remapValueped value within the output range.
  */
 uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min, uint16_t out_max)
@@ -667,26 +664,17 @@ uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min,
 }
 
 /***************************************************************************/
-
-
-/***************************************************************************/
-
-
-/***************************************************************************/
-
-
-/***************************************************************************/
 /***************************** General Functions ***************************/
 /***************************************************************************/
 /**
- * @brief Turn on the selected motor (sets PWM output to max ESC value).
- * @param motor  Motor index (MOTOR_1 to MOTOR_6).
- * @retval H14RA_OK on success, error code otherwise.
+ * @Turn on the selected motor (sets PWM output to max ESC value).
+ * motor:  Motor index (MOTOR_1 to MOTOR_6).
  */
 Module_Status escTurnOnMotor(Motor motor) {
 	if (motor > MOTOR_6 || motor < MOTOR_1) {
 		return H14RA_ERR_INVALID_MOTOR;
 	}
+	/*Check if PWM has actually already started or not.*/
 	if (!(escPwmStartedFlags & (1 << motor))){
 		if (HAL_TIM_PWM_Start(motors[motor].htim, motors[motor].channel) != HAL_OK) {
 			return H14RA_ERROR;
@@ -694,6 +682,7 @@ Module_Status escTurnOnMotor(Motor motor) {
 		/*Set the Flag after PWM started*/
 		escPwmStartedFlags |= (1 << motor);
 	}
+
 	/*Set Capture Compare Register(CCRx) to max ESC value */
 	*(motors[motor].CCRx) = MAX_ESC_CCR_VALUE;
 	return H14RA_OK;
@@ -701,18 +690,19 @@ Module_Status escTurnOnMotor(Motor motor) {
 
 /***************************************************************************/
 /**
- * @brief Turn off the selected motor (stops PWM and clears output).
- * @param motor  Motor index (MOTOR_1 to MOTOR_6).
- * @retval H14RA_OK on success, error code otherwise.
+ * @Turn off the selected motor (stops PWM and clears output).
+ * @motor:  Motor index (MOTOR_1 to MOTOR_6)..
  */
 Module_Status escTurnOffMotor(Motor motor){
 	if (motor > MOTOR_6 || motor < MOTOR_1 ){
 		return H14RA_ERR_INVALID_MOTOR;
 	}
+
 	/*Stop generate PWM*/
 	if(HAL_TIM_PWM_Stop(motors[motor].htim, motors[motor].channel) != HAL_OK ){
 		return H14RA_ERROR;
 	}
+
 	else{
 		/*Reset Capture Compare Register to disable the output*/
 		*(motors[motor].CCRx) = 0;
@@ -724,25 +714,28 @@ Module_Status escTurnOffMotor(Motor motor){
 
 /***************************************************************************/
 /**
- * @brief Set the speed (duty cycle) of a motor
- * @param motor      Motor index (MOTOR_1 to MOTOR_6).
- * @param dutyCycle  Duty cycle percentage (0 to 100).
- * @retval H14RA_OK on success, error code otherwise.
+ * @Set the speed (duty cycle) of a motor
+ * motor: Motor index (MOTOR_1 to MOTOR_6).
+ * dutyCycle:  Duty cycle percentage (0 to 100).
  */
 Module_Status escSetSpeedMotor(Motor motor, uint8_t dutyCycle) {
 	if (motor > MOTOR_6 || motor < MOTOR_1) {
 		return H14RA_ERR_INVALID_MOTOR;
 	}
+
 	if (dutyCycle > MAX_DUTY_CYCLE || dutyCycle < MIN_DUTY_CYCLE) {
 		return H14RA_ERR_WRONGPARAMS;
 	} else {
+
+		/*Check if PWM has actually already started or not*/
 		if (!(escPwmStartedFlags & (1 << motor))) {
 			if (HAL_TIM_PWM_Start(motors[motor].htim, motors[motor].channel)!= HAL_OK) {
 				return H14RA_ERROR;
 			}
 			/*Set the Flag after PWM started*/
-			 escPwmStartedFlags |= (1 << motor);
+			escPwmStartedFlags |= (1 << motor);
 		}
+		/* mapping the desired duty cycle (0–100%) to the corresponding timer CCRx value*/
 		*(motors[motor].CCRx) = RemapValue(dutyCycle, MIN_DUTY_CYCLE,MAX_DUTY_CYCLE, MIN_ESC_CCR_VALUE, MAX_ESC_CCR_VALUE);
 		return H14RA_OK;
 	}
@@ -750,11 +743,10 @@ Module_Status escSetSpeedMotor(Motor motor, uint8_t dutyCycle) {
 
 /***************************************************************************/
 /**
- * @brief Generate a PWM signal on a selected output channel with a specified frequency and duty cycle.
- * @param out         Output channel index (OUT_1 to OUT_6).
- * @param freq_Hz     Desired frequency in Hz.
- * @param dutyCycle   Duty cycle percentage (0 to 100).
- * @retval H14RA_OK on success, error code otherwise.
+ * @Generate a PWM signal on a selected output channel with a specified frequency and duty cycle.
+ * out:Output channel index (OUT_1 to OUT_6).
+ * freq_Hz: Desired frequency in Hz.
+ * dutyCycle: Duty cycle percentage (0 to 100).
  */
 Module_Status pwmGenerate(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
 	if (out > OUT_6 || out < OUT_1) {
@@ -763,43 +755,54 @@ Module_Status pwmGenerate(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
 	if (dutyCycle > MAX_DUTY_CYCLE || dutyCycle < MIN_DUTY_CYCLE) {
 		return H14RA_ERR_WRONGPARAMS;
 	}
-	/*Only reconfigure timer if frequency has changed*/
+
+	/* Only reconfigure timer if the frequency has changed from the last value */
 	if (prevFreq[out] != freq_Hz) {
 		/*Adjust this per clock setup*/
-		uint32_t timerClk = HAL_RCC_GetPCLK1Freq();
+		uint32_t timerClk = HAL_RCC_GetPCLK1Freq(); // Get the peripheral clock frequency used by the timer
 		uint32_t prescaler = 0;
 		uint32_t period = 0;
 
-		/*Try to calculate a suitable prescaler and period*/
+		/*Try to calculate a suitable prescaler and period for the desired frequency*/
 		for (prescaler = 0; prescaler < 0xFFFF; prescaler++) {
+			/*Calculate the auto-reload period value*/
 			period = (timerClk / ((prescaler + 1) * freq_Hz)) - 1;
 			if (period <= 0xFFFF)
-				break;
+				break; // Valid combination found
 		}
+		/*Return error if frequency cannot be achieved or exceeds limits*/
 		if (prescaler >= 0xFFFF || period >= 0xFFFF || freq_Hz > MAX_FREQ_OUT) {
 			return H14RA_ERR_INVALID_FREQ;
 		}
 		ChannelsOut[out].htim->Init.Prescaler = prescaler;
 		ChannelsOut[out].htim->Init.Period = period;
+
+		/*Re-initialize the timer with new settings*/
 		if (HAL_TIM_PWM_Init(ChannelsOut[out].htim) != HAL_OK) {
 			return H14RA_ERROR;
 		}
+
 		TIM_OC_InitTypeDef sConfigOC = { 0 };
 		sConfigOC.OCMode = TIM_OCMODE_PWM2;
-		sConfigOC.Pulse = (uint32_t) ((dutyCycle / 100.0f) * period);
+		sConfigOC.Pulse = (uint32_t) ((dutyCycle / 100.0f) * period);//Calculate pulse width(CCRx) based on duty cycle
 		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
 		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
 
 		if (HAL_TIM_PWM_ConfigChannel(ChannelsOut[out].htim, &sConfigOC,ChannelsOut[out].channel) != HAL_OK) {
 			return H14RA_ERROR;
 		}
+
+		/*Update the previous frequency to avoid reconfiguration next time*/
 		prevFreq[out] = freq_Hz;
 
 	} else {
+
+		/*If frequency hasn't changed, just update the CCR register (duty cycle)*/
 		uint32_t period = ChannelsOut[out].htim->Init.Period;
 		*(motors[out].CCRx) = (uint32_t) ((dutyCycle / 100.0f) * period);
 	}
-	/*Start PWM if not already started*/
+
+	/*Check if PWM has actually already started or not*/
 	if (!(pwmStartedFlags & (1 << out))) {
 		if (HAL_TIM_PWM_Start(ChannelsOut[out].htim, ChannelsOut[out].channel)!= HAL_OK) {
 			return H14RA_ERROR;
@@ -809,9 +812,6 @@ Module_Status pwmGenerate(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
 	}
 	return H14RA_OK;
 }
-
-/***************************************************************************/
-
 
 /***************************************************************************/
 /********************************* Commands ********************************/

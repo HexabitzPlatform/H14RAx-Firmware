@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H14RA_inputs.c
- Description   : Source code for Bitz digital and analog inputs.
-
+ File Name  : H14RAx_inputs.c
+ Description: Digital and analog input management for H14RAx.
+ Buttons    : Debounce, click detection, and event handling.
+ ADC        : Port configuration, temperature/Vref readings, percentage calculation.
  */
 
 /* Includes ****************************************************************/

@@ -2,9 +2,11 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H14RA_it.c
- Description   :Interrupt Service Routines.
-
+ File Name  : H14RAx_it.c
+ Description: Interrupt handlers for H14RAx module.
+ System     : HardFault, Stack/Heap overflow handlers.
+ UART       : DMA and error callbacks for all ports (USART1-6).
+ RTOS       : FreeRTOS hook functions
  */
 
 /* Includes ****************************************************************/

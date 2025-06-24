@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
  
- File Name     : H14RA_dma.h
- Description   : Header file contains Peripheral DMA setup.
-
+ File Name     : H14RAx_dma.h
+ Description   : DMA peripheral configuration header.
+ Functions     : DMA initialization, mode switching, CRC calculation.
+ Macros        : DMA interrupt source checking.
  */
 
 /* Define to prevent recursive inclusion ***********************************/

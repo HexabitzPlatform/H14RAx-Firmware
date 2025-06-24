@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H14RA_rtc.c
- Description   : Peripheral RTC setup source file.
-
+ File Name  : H14RAx_rtc.c
+ Description: Real-Time Clock configuration for H14RAx.
+ RTC        : 24/12-hour format, calendar setup, time/date management.
+ System     : Power-on/reset status detection, backup register handling.
  */
 
 /* Includes ****************************************************************/

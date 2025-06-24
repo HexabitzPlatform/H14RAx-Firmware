@@ -2,14 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H14RA_timers.c
- Description   : Peripheral timers setup source file.
-
- Required MCU resources :
-
- >> Timer 14 for micro-sec delay.
- >> Timer 15 for milli-sec delay.
-
+ File Name  : H14RAx_timers.c
+ Description: Timer configurations for H14RAx module.
+ Timers     : TIM16 (µs delays), TIM17 (ms delays), IWDG (500ms watchdog).
+ PWM Timers : TIM1, TIM2, TIM3, TIM4, TIM15 to generate PWM signals
  */
 
 /* Includes ****************************************************************/

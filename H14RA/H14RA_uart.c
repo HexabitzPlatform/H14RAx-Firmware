@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H14RA_uart.c
- Description   : Source Code provides configuration for USART instances.
-
+ File Name    : H14RAx_uart.c
+ Description  : UART configurations for H14RAx module.
+ UART         : USART1-6 initialization with DMA RX (Channels 1-6).
+ Communication: Baudrate adjustment, pin swapping, mutex-protected read/write
  */
 
 /* Includes ****************************************************************/

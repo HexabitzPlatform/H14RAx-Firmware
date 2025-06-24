@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
  
- File Name     : H14RA_MemoryMap.h
- Description   : Module MCU memory map header file.
-
+ File Name  : H14RAx_MemoryMap.h
+ Description: STM32G0B0 memory map configuration.
+ Flash      : 512KB total (Application: 500KB, Topology: 2KB, Snippets: 2KB, EEPROM: 8KB).
+ EEPROM     : Stores 1000 16-bit variables across 8 pages.
  */
 
 /* Define to prevent recursive inclusion************************************/

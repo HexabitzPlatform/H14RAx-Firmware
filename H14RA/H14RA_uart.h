@@ -2,8 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H14RA_uart.h
- Description   : Header file provides configuration for USART instances.
+ File Name    : H14RAx.h_uart.h
+ Description  : UART interface declarations for H14RAx.
+ Functions    : Mutex-protected read/write operations (polling/IT modes).
+ Communication: Port direction messaging support.
  */
 
 /* Define to prevent recursive inclusion ***********************************/

@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H14RA_inputs.h
- Description   : header file for Bitz digital and analog inputs.
- 
+ File Name  : H14RAx_inputs.h
+ Description: Input interfaces for H14RAx module.
+ ADC        : Channel definitions, calibration constants.
+ Functions  : Analog readings, temperature/Vref measurements.
 */
 
 /* Includes ****************************************************************/

@@ -2,15 +2,11 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
  
- File Name     : H14RA.h
- Description   : Header file for module H14RA.
- (Description_of_module)
-
- (Description of Special module peripheral configuration):
- >>
- >>
- >>
-
+ File Name  : H14RAx.h
+ Description: Main header for module hardware configuration and switch control.
+ UART       :  Six ports (P1-P6) mapped to USART1-6 with GPIO pin assignments.
+ GPIO       :  Indicator LED on PB15, port pin configurations.
+ TIMER      : Six timers to generate six PWM signals for ESC circuit.
  */
 
 /* Define to prevent recursive inclusion ***********************************/

@@ -2,15 +2,12 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H14RA.c
- Description   : Source code for module H14RA.
- (Description_of_module)
-
- (Description of Special module peripheral configuration):
- >>
- >>
- >>
-
+ File Name  : H14RAx.c
+ Description: H14RAx Control of up to 6 BLDC motors using PWM signals,that each motor is
+ * driven through an Electronic Speed Controller (ESC).
+ *
+ Components : UART ports, PWM timers.
+ Functions  : escTurnOnMotor, escTurnOffMotor, escSetSpeedMotor, pwmGenerate.
  */
 
 /* Includes ****************************************************************/

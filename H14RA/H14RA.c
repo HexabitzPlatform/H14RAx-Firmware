@@ -561,18 +561,18 @@ Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src,uint
 
 	case CODE_H14RA_ON:
 		motor = (uint8_t) cMessage[port - 1][shift];
-		escTurnOnMotor(motor - 1);
+		TurnOnMotor(motor - 1);
 		break;
 
 	case CODE_H14RA_OFF:
 		motor = (uint8_t) cMessage[port - 1][shift];
-		escTurnOffMotor(motor - 1);
+		TurnOffMotor(motor - 1);
 		break;
 
 	case CODE_H14RA_SPEED:
 		motor = (uint8_t) cMessage[port - 1][shift];
 		dutyCycle = (uint8_t) cMessage[port - 1][1 + shift];
-		escSetSpeedMotor(motor - 1, dutyCycle);
+		SetSpeedMotor(motor - 1, dutyCycle);
 		break;
 
 	case CODE_H14RA_PWM:
@@ -582,7 +582,7 @@ Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src,uint
 				+ ((uint32_t) cMessage[port - 1][3 + shift] << 16)
 				+ ((uint32_t) cMessage[port - 1][4 + shift] << 24);
 		dutyCycle = (uint8_t) cMessage[port - 1][5 + shift];
-		pwmGenerate(out - 1, freq_Hz, dutyCycle);
+		GeneratePWM(out - 1, freq_Hz, dutyCycle);
 		break;
 	default:
 		result = H14RA_ERR_UNKNOWNMESSAGE;
@@ -667,7 +667,7 @@ uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min,
  * @Turn on the selected motor (sets PWM output to max ESC value).
  * motor:  Motor index (MOTOR_1 to MOTOR_6).
  */
-Module_Status escTurnOnMotor(Motor motor) {
+Module_Status TurnOnMotor(Motor motor) {
 	if (motor > MOTOR_6 || motor < MOTOR_1) {
 		return H14RA_ERR_INVALID_MOTOR;
 	}
@@ -690,7 +690,7 @@ Module_Status escTurnOnMotor(Motor motor) {
  * @Turn off the selected motor (stops PWM and clears output).
  * @motor:  Motor index (MOTOR_1 to MOTOR_6)..
  */
-Module_Status escTurnOffMotor(Motor motor){
+Module_Status TurnOffMotor(Motor motor){
 	if (motor > MOTOR_6 || motor < MOTOR_1 ){
 		return H14RA_ERR_INVALID_MOTOR;
 	}
@@ -715,7 +715,7 @@ Module_Status escTurnOffMotor(Motor motor){
  * motor: Motor index (MOTOR_1 to MOTOR_6).
  * dutyCycle:  Duty cycle percentage (0 to 100).
  */
-Module_Status escSetSpeedMotor(Motor motor, uint8_t dutyCycle) {
+Module_Status SetSpeedMotor(Motor motor, uint8_t dutyCycle) {
 	if (motor > MOTOR_6 || motor < MOTOR_1) {
 		return H14RA_ERR_INVALID_MOTOR;
 	}
@@ -742,10 +742,10 @@ Module_Status escSetSpeedMotor(Motor motor, uint8_t dutyCycle) {
 /**
  * @Generate a PWM signal on a selected output channel with a specified frequency and duty cycle.
  * out:Output channel index (OUT_1 to OUT_6).
- * freq_Hz: Desired frequency in Hz.
+ * freq_Hz: Desired frequency in Hz (0 to 50KHz).
  * dutyCycle: Duty cycle percentage (0 to 100).
  */
-Module_Status pwmGenerate(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
+Module_Status GeneratePWM(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
 	if (out > OUT_6 || out < OUT_1) {
 		return H14RA_ERR_INVALID_OUT_CHANNEL;
 	}
@@ -813,7 +813,7 @@ Module_Status pwmGenerate(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
 /***************************************************************************/
 /********************************* Commands ********************************/
 /***************************************************************************/
-portBASE_TYPE escTurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
+portBASE_TYPE TurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
 	Module_Status status = H14RA_OK;
 	Motor motor = H14RA_ERROR;
 	int8_t *pcParameterString1;
@@ -851,7 +851,7 @@ portBASE_TYPE escTurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 }
 
 /***************************************************************************/
-portBASE_TYPE escTurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
+portBASE_TYPE TurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
 	Module_Status status = H14RA_OK;
 	Motor motor = H14RA_ERROR;
 	int8_t *pcParameterString1;
@@ -889,7 +889,7 @@ portBASE_TYPE escTurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
 }
 
 /***************************************************************************/
-portBASE_TYPE escSetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferLen, const int8_t *pcCommandString) {
+portBASE_TYPE SetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferLen, const int8_t *pcCommandString) {
 	Module_Status status = H14RA_OK;
 	Motor motor = H14RA_ERROR;
 	uint8_t dutyCycle = 0;
@@ -936,7 +936,7 @@ portBASE_TYPE escSetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferL
 }
 
 /***************************************************************************/
-portBASE_TYPE pwmGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
+portBASE_TYPE PWMGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
 	Module_Status status = H14RA_OK;
 	ChannelOut out = H14RA_ERROR;
 	uint8_t dutyCycle = 0;

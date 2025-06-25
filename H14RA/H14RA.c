@@ -83,38 +83,38 @@ Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src, uin
 uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min, uint16_t out_max);
 
 /* Create CLI commands *****************************************************/
-portBASE_TYPE escTurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-portBASE_TYPE escTurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-portBASE_TYPE escSetSpeedMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-portBASE_TYPE pwmGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE TurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE TurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE SetSpeedMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE GeneratePWMCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* CLI command structure ***************************************************/
 /* CLI command structure : escTurnOnMotor */
 const CLI_Command_Definition_t escTurnOnMotorDefinition = {
 	( const int8_t * ) "on", /* The command string to type. */
 	( const int8_t * ) "on:\r\nTurn on the selected motor(m1 to m6)(1st par.) to max speed(MAX ESC value):\n\n\r",
-	escTurnOnMotorCommand, /* The function to run. */
+	TurnOnMotorCommand, /* The function to run. */
 	1 /* one parameters are expected. */
 };
 /* CLI command structure : escTurnOffMotor */
 const CLI_Command_Definition_t escTurnOffMotorDefinition = {
 	( const int8_t * ) "off", /* The command string to type. */
 	( const int8_t * ) "off:\r\nTurn off the selected motor(m1 to m6)(1st par.)\n\n\r",
-	escTurnOffMotorCommand, /* The function to run. */
+	TurnOffMotorCommand, /* The function to run. */
 	1 /* one parameters are expected. */
 };
 /* CLI command structure : escSetSpeedMotor */
 const CLI_Command_Definition_t escSetSpeedMotorDefinition = {
 	( const int8_t * ) "speed", /* The command string to type. */
 	( const int8_t * ) "speed:\r\nSet speed of the selected motor(m1 to m6)(1st par.),with required speed(0% up to 100%)(2st par.)\n\n\r",
-	escSetSpeedMotorCommand, /* The function to run. */
+	SetSpeedMotorCommand, /* The function to run. */
 	2 /* tow parameters are expected. */
 };
 /*CLI command structure : pwmGenerate */
 const CLI_Command_Definition_t pwmGenerateDefinition = {
 	( const int8_t * ) "pwm", /* The command string to type. */
 	( const int8_t * ) "pwm:\r\nGenerate a PWM signal on a selected output(out1 to out6)(1st par.), with a specified frequency[HZ](2st par.), and duty cycle(0% up to 100%)(3st par.)\n\n\r",
-	pwmGenerateCommand, /* The function to run. */
+	GeneratePWMCommand, /* The function to run. */
 	3 /* three parameters are expected. */
 };
 /***************************************************************************/
@@ -840,7 +840,7 @@ portBASE_TYPE TurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 	    motor = MOTOR_6;
 	}
 
-	status = escTurnOnMotor(motor);
+	status = TurnOnMotor(motor);
 	if(status == H14RA_OK){
 		sprintf((char* )pcWriteBuffer,(char* )pcOKMessage,motor+1);
 	}
@@ -878,7 +878,7 @@ portBASE_TYPE TurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
 	    motor = MOTOR_6;
 	}
 
-	status = escTurnOffMotor(motor);
+	status = TurnOffMotor(motor);
 	if(status == H14RA_OK){
 		sprintf((char* )pcWriteBuffer,(char* )pcOKMessage,motor+1);
 	}
@@ -924,7 +924,7 @@ portBASE_TYPE SetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferLen,
 	pcParameterString2 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 2,&xParameterStringLength2);
 	dutyCycle = (uint8_t) atol((char*) pcParameterString2);
 
-	status = escSetSpeedMotor(motor, dutyCycle);
+	status = SetSpeedMotor(motor, dutyCycle);
 	if (status == H14RA_OK) {
 		sprintf((char*) pcWriteBuffer, (char*) pcOKMessage, motor + 1,dutyCycle);
 	} else if (status == H14RA_ERR_INVALID_MOTOR) {
@@ -936,7 +936,7 @@ portBASE_TYPE SetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferLen,
 }
 
 /***************************************************************************/
-portBASE_TYPE PWMGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
+portBASE_TYPE GeneratePWMCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
 	Module_Status status = H14RA_OK;
 	ChannelOut out = H14RA_ERROR;
 	uint8_t dutyCycle = 0;
@@ -979,7 +979,7 @@ portBASE_TYPE PWMGenerateCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 	pcParameterString3 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 3,&xParameterStringLength3);
 	dutyCycle = (uint8_t) atol((char*) pcParameterString3);
 
-	status = pwmGenerate(out, freq_Hz, dutyCycle);
+	status = GeneratePWM(out, freq_Hz, dutyCycle);
 	if (status == H14RA_OK) {
 		sprintf((char*) pcWriteBuffer, (char*) pcOKMessage, out + 1, freq_Hz, dutyCycle);
 	} else if (status == H14RA_ERR_INVALID_OUT_CHANNEL) {

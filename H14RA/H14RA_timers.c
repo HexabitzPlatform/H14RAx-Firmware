@@ -20,6 +20,7 @@ extern void MX_TIM1_Init(void);
 extern void MX_TIM2_Init(void);
 extern void MX_TIM3_Init(void);
 extern void MX_TIM4_Init(void);
+extern void MX_TIM14_Init(void);
 extern void MX_TIM15_Init(void);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base);
@@ -34,6 +35,7 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim14;
 extern TIM_HandleTypeDef htim15;
 /***************************************************************************/
 /* Configure Timers ********************************************************/
@@ -244,7 +246,32 @@ void MX_TIM4_Init(void) {
 
 	HAL_TIM_MspPostInit(&htim4);
 }
+/***************************************************************************/
+/*
+ * @brief TIM14 Initialization Function
+ */
+void MX_TIM14_Init(void){
 
+	TIM_OC_InitTypeDef sConfigOC = {0};
+	htim14.Instance = TIM14;
+	htim14.Init.Prescaler = TIMER_PRESCALER;
+	htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim14.Init.Period = TIMER_PERIOD;
+	htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+
+	HAL_TIM_Base_Init(&htim14);
+	HAL_TIM_PWM_Init(&htim14);
+
+	sConfigOC.OCMode = TIM_OCMODE_PWM2;
+	sConfigOC.Pulse = 0;
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	HAL_TIM_PWM_ConfigChannel(&htim14, &sConfigOC, TIMER_CHANAL_OUT3);
+
+	HAL_TIM_MspPostInit(&htim14);
+
+}
 /***************************************************************************/
 /**
  * @brief TIM15 Initialization Function
@@ -316,6 +343,9 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base) {
 	} else if (htim_base->Instance == TIM4) {
 		/* Peripheral clock enable */
 		__HAL_RCC_TIM4_CLK_ENABLE();
+	} else if(htim_base->Instance==TIM14)   {
+		/* Peripheral clock enable */
+		__HAL_RCC_TIM14_CLK_ENABLE();
 	} else if (htim_base->Instance == TIM15) {
 		/* Initializes the peripherals clocks*/
 		PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_TIM15;
@@ -353,12 +383,12 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim) {
 	} else if (htim->Instance == TIM3) {
 		__HAL_RCC_GPIOB_CLK_ENABLE();
 		/**TIM3 GPIO Configuration*/
-		GPIO_InitStruct.Pin = TIMER_OUT3_PIN | TIMER_OUT5_PIN;
+		GPIO_InitStruct.Pin = TIMER_OUT5_PIN;
 		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 		GPIO_InitStruct.Pull = GPIO_NOPULL;
 		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 		GPIO_InitStruct.Alternate = GPIO_AF1_TIM3;
-		HAL_GPIO_Init(TIMER_OUT3_PORT, &GPIO_InitStruct);
+		HAL_GPIO_Init(TIMER_OUT5_PORT, &GPIO_InitStruct);
 
 	} else if (htim->Instance == TIM4) {
 		__HAL_RCC_GPIOB_CLK_ENABLE();
@@ -369,6 +399,15 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim) {
 		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 		GPIO_InitStruct.Alternate = GPIO_AF9_TIM4;
 		HAL_GPIO_Init(TIMER_OUT6_PORT, &GPIO_InitStruct);
+	} else if(htim->Instance==TIM14)  {
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+		/**TIM14 GPIO Configuration*/
+		GPIO_InitStruct.Pin = TIMER_OUT3_PIN;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+		GPIO_InitStruct.Alternate = GPIO_AF0_TIM14;
+		HAL_GPIO_Init(TIMER_OUT3_PORT, &GPIO_InitStruct);
 	} else if (htim->Instance == TIM15) {
 		__HAL_RCC_GPIOB_CLK_ENABLE();
 		/**TIM15 GPIO Configuration*/
@@ -402,11 +441,14 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *htim_base) {
 		/* Peripheral clock disable */
 		__HAL_RCC_TIM4_CLK_DISABLE();
 
+	} else if(htim_base->Instance == TIM14) {
+		/* Peripheral clock disable */
+		__HAL_RCC_TIM14_CLK_DISABLE();
+
 	} else if (htim_base->Instance == TIM15) {
 		/* Peripheral clock disable */
 		__HAL_RCC_TIM15_CLK_DISABLE();
 	}
-
 }
 
 /***************************************************************************/

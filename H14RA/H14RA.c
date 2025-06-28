@@ -28,6 +28,7 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim14;
 TIM_HandleTypeDef htim15;
 
 /* Private Variables *******************************************************/
@@ -71,6 +72,7 @@ void MX_TIM1_Init(void);
 void MX_TIM2_Init(void);
 void MX_TIM3_Init(void);
 void MX_TIM4_Init(void);
+void MX_TIM14_Init(void);
 void MX_TIM15_Init(void);
 
 void Module_Peripheral_Init(void);
@@ -528,6 +530,7 @@ void Module_Peripheral_Init(void) {
 	MX_TIM2_Init();
 	MX_TIM3_Init();
 	MX_TIM4_Init();
+	MX_TIM14_Init();
 	MX_TIM15_Init();
 	/* Circulating DMA Channels ON All Module */
 	for (int i = 1; i <= NUM_OF_PORTS; i++) {

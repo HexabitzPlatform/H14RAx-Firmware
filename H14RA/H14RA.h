@@ -59,6 +59,7 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim14;
 extern TIM_HandleTypeDef htim15;
 
 /* Port Definitions */
@@ -115,7 +116,7 @@ extern TIM_HandleTypeDef htim15;
 /*htim timers handlers*/
 #define TIMER_HANDLE_OUT1 htim1
 #define TIMER_HANDLE_OUT2 htim15
-#define TIMER_HANDLE_OUT3 htim3
+#define TIMER_HANDLE_OUT3 htim14
 #define TIMER_HANDLE_OUT4 htim2
 #define TIMER_HANDLE_OUT5 htim3
 #define TIMER_HANDLE_OUT6 htim4
@@ -123,7 +124,7 @@ extern TIM_HandleTypeDef htim15;
 /*Channels of the timers*/
 #define TIMER_CHANAL_OUT1 TIM_CHANNEL_4
 #define TIMER_CHANAL_OUT2 TIM_CHANNEL_1
-#define TIMER_CHANAL_OUT3 TIM_CHANNEL_4
+#define TIMER_CHANAL_OUT3 TIM_CHANNEL_1
 #define TIMER_CHANAL_OUT4 TIM_CHANNEL_1
 #define TIMER_CHANAL_OUT5 TIM_CHANNEL_2
 #define TIMER_CHANAL_OUT6 TIM_CHANNEL_4
@@ -131,7 +132,7 @@ extern TIM_HandleTypeDef htim15;
 /*CCR(Capture Compare Register) of the Timers*/
 #define TIMER_CCR_OUT1 TIM1->CCR4
 #define TIMER_CCR_OUT2 TIM15->CCR1
-#define TIMER_CCR_OUT3 TIM3->CCR4
+#define TIMER_CCR_OUT3 TIM14->CCR1
 #define TIMER_CCR_OUT4 TIM2->CCR1
 #define TIMER_CCR_OUT5 TIM3->CCR2
 #define TIMER_CCR_OUT6 TIM4->CCR4

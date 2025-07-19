@@ -245,9 +245,9 @@ extern void SystemClock_Config(void);
 /***************************************************************************/
 /***************************** General Functions ***************************/
 /***************************************************************************/
-Module_Status TurnOnMotor(Motor motor);
-Module_Status TurnOffMotor(Motor motor);
-Module_Status SetSpeedMotor(Motor motor, uint8_t dutyCycle);
+Module_Status MotorTurnOn(Motor motor);
+Module_Status MotorTurnOff(Motor motor);
+Module_Status MotorSpeedControl(Motor motor, uint8_t dutyCycle);
 Module_Status GeneratePWM(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle);
 #endif /* H14RA_H */
 

@@ -7,7 +7,7 @@
  * driven through an Electronic Speed Controller (ESC).
  *
  Components : UART ports, PWM timers.
- Functions  : escTurnOnMotor, escTurnOffMotor, escSetSpeedMotor, pwmGenerate.
+ Functions  : escMotorTurnOn, escMotorTurnOff, escMotorSpeedControl, pwmGenerate.
  */
 
 /* Includes ****************************************************************/
@@ -85,31 +85,31 @@ Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src, uin
 uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min, uint16_t out_max);
 
 /* Create CLI commands *****************************************************/
-portBASE_TYPE TurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-portBASE_TYPE TurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-portBASE_TYPE SetSpeedMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE MotorTurnOnCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE MotorTurnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+portBASE_TYPE MotorSpeedControlCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 portBASE_TYPE GeneratePWMCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* CLI command structure ***************************************************/
-/* CLI command structure : escTurnOnMotor */
-const CLI_Command_Definition_t escTurnOnMotorDefinition = {
+/* CLI command structure : escMotorTurnOn */
+const CLI_Command_Definition_t escMotorTurnOnDefinition = {
 	( const int8_t * ) "on", /* The command string to type. */
 	( const int8_t * ) "on:\r\nTurn on the selected motor(m1 to m6)(1st par.) to max speed(MAX ESC value):\n\n\r",
-	TurnOnMotorCommand, /* The function to run. */
+	MotorTurnOnCommand, /* The function to run. */
 	1 /* one parameters are expected. */
 };
-/* CLI command structure : escTurnOffMotor */
-const CLI_Command_Definition_t escTurnOffMotorDefinition = {
+/* CLI command structure : escMotorTurnOff */
+const CLI_Command_Definition_t escMotorTurnOffDefinition = {
 	( const int8_t * ) "off", /* The command string to type. */
 	( const int8_t * ) "off:\r\nTurn off the selected motor(m1 to m6)(1st par.)\n\n\r",
-	TurnOffMotorCommand, /* The function to run. */
+	MotorTurnOffCommand, /* The function to run. */
 	1 /* one parameters are expected. */
 };
-/* CLI command structure : escSetSpeedMotor */
-const CLI_Command_Definition_t escSetSpeedMotorDefinition = {
+/* CLI command structure : escMotorSpeedControl */
+const CLI_Command_Definition_t escMotorSpeedControlDefinition = {
 	( const int8_t * ) "speed", /* The command string to type. */
 	( const int8_t * ) "speed:\r\nSet speed of the selected motor(m1 to m6)(1st par.),with required speed(0% up to 100%)(2st par.)\n\n\r",
-	SetSpeedMotorCommand, /* The function to run. */
+	MotorSpeedControlCommand, /* The function to run. */
 	2 /* tow parameters are expected. */
 };
 /*CLI command structure : pwmGenerate */
@@ -564,18 +564,18 @@ Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src,uint
 
 	case CODE_H14RA_ON:
 		motor = (uint8_t) cMessage[port - 1][shift];
-		TurnOnMotor(motor - 1);
+		MotorTurnOn(motor - 1);
 		break;
 
 	case CODE_H14RA_OFF:
 		motor = (uint8_t) cMessage[port - 1][shift];
-		TurnOffMotor(motor - 1);
+		MotorTurnOff(motor - 1);
 		break;
 
 	case CODE_H14RA_SPEED:
 		motor = (uint8_t) cMessage[port - 1][shift];
 		dutyCycle = (uint8_t) cMessage[port - 1][1 + shift];
-		SetSpeedMotor(motor - 1, dutyCycle);
+		MotorSpeedControl(motor - 1, dutyCycle);
 		break;
 
 	case CODE_H14RA_PWM:
@@ -617,9 +617,9 @@ uint8_t GetPort(UART_HandleTypeDef *huart) {
 /***************************************************************************/
 /* Register this module CLI Commands */
 void RegisterModuleCLICommands(void) {
-	FreeRTOS_CLIRegisterCommand(&escTurnOnMotorDefinition);
-	FreeRTOS_CLIRegisterCommand(&escTurnOffMotorDefinition);
-	FreeRTOS_CLIRegisterCommand(&escSetSpeedMotorDefinition);
+	FreeRTOS_CLIRegisterCommand(&escMotorTurnOnDefinition);
+	FreeRTOS_CLIRegisterCommand(&escMotorTurnOffDefinition);
+	FreeRTOS_CLIRegisterCommand(&escMotorSpeedControlDefinition);
 	FreeRTOS_CLIRegisterCommand(&pwmGenerateDefinition);
 }
 
@@ -670,7 +670,7 @@ uint16_t RemapValue(uint8_t x, uint8_t in_min, uint8_t in_max, uint16_t out_min,
  * @Turn on the selected motor (sets PWM output to max ESC value).
  * motor:  Motor index (MOTOR_1 to MOTOR_6).
  */
-Module_Status TurnOnMotor(Motor motor) {
+Module_Status MotorTurnOn(Motor motor) {
 	if (motor > MOTOR_6 || motor < MOTOR_1) {
 		return H14RA_ERR_INVALID_MOTOR;
 	}
@@ -693,7 +693,7 @@ Module_Status TurnOnMotor(Motor motor) {
  * @Turn off the selected motor (stops PWM and clears output).
  * @motor:  Motor index (MOTOR_1 to MOTOR_6)..
  */
-Module_Status TurnOffMotor(Motor motor){
+Module_Status MotorTurnOff(Motor motor){
 	if (motor > MOTOR_6 || motor < MOTOR_1 ){
 		return H14RA_ERR_INVALID_MOTOR;
 	}
@@ -718,7 +718,7 @@ Module_Status TurnOffMotor(Motor motor){
  * motor: Motor index (MOTOR_1 to MOTOR_6).
  * dutyCycle:  Duty cycle percentage (0 to 100).
  */
-Module_Status SetSpeedMotor(Motor motor, uint8_t dutyCycle) {
+Module_Status MotorSpeedControl(Motor motor, uint8_t dutyCycle) {
 	if (motor > MOTOR_6 || motor < MOTOR_1) {
 		return H14RA_ERR_INVALID_MOTOR;
 	}
@@ -816,7 +816,7 @@ Module_Status GeneratePWM(ChannelOut out, uint32_t freq_Hz, uint8_t dutyCycle) {
 /***************************************************************************/
 /********************************* Commands ********************************/
 /***************************************************************************/
-portBASE_TYPE TurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
+portBASE_TYPE MotorTurnOnCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
 	Module_Status status = H14RA_OK;
 	Motor motor = H14RA_ERROR;
 	int8_t *pcParameterString1;
@@ -843,7 +843,7 @@ portBASE_TYPE TurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 	    motor = MOTOR_6;
 	}
 
-	status = TurnOnMotor(motor);
+	status = MotorTurnOn(motor);
 	if(status == H14RA_OK){
 		sprintf((char* )pcWriteBuffer,(char* )pcOKMessage,motor+1);
 	}
@@ -854,7 +854,7 @@ portBASE_TYPE TurnOnMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 }
 
 /***************************************************************************/
-portBASE_TYPE TurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
+portBASE_TYPE MotorTurnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString ){
 	Module_Status status = H14RA_OK;
 	Motor motor = H14RA_ERROR;
 	int8_t *pcParameterString1;
@@ -881,7 +881,7 @@ portBASE_TYPE TurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
 	    motor = MOTOR_6;
 	}
 
-	status = TurnOffMotor(motor);
+	status = MotorTurnOff(motor);
 	if(status == H14RA_OK){
 		sprintf((char* )pcWriteBuffer,(char* )pcOKMessage,motor+1);
 	}
@@ -892,7 +892,7 @@ portBASE_TYPE TurnOffMotorCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
 }
 
 /***************************************************************************/
-portBASE_TYPE SetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferLen, const int8_t *pcCommandString) {
+portBASE_TYPE MotorSpeedControlCommand(int8_t *pcWriteBuffer,size_t xWriteBufferLen, const int8_t *pcCommandString) {
 	Module_Status status = H14RA_OK;
 	Motor motor = H14RA_ERROR;
 	uint8_t dutyCycle = 0;
@@ -927,7 +927,7 @@ portBASE_TYPE SetSpeedMotorCommand(int8_t *pcWriteBuffer,size_t xWriteBufferLen,
 	pcParameterString2 = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, 2,&xParameterStringLength2);
 	dutyCycle = (uint8_t) atol((char*) pcParameterString2);
 
-	status = SetSpeedMotor(motor, dutyCycle);
+	status = MotorSpeedControl(motor, dutyCycle);
 	if (status == H14RA_OK) {
 		sprintf((char*) pcWriteBuffer, (char*) pcOKMessage, motor + 1,dutyCycle);
 	} else if (status == H14RA_ERR_INVALID_MOTOR) {
